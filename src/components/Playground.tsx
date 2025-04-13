@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Engine, Render, World, Bodies, Body, Composite } from 'matter-js';
 import { ControlPanel } from './ControlPanel';
@@ -29,6 +28,7 @@ export const Playground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Engine | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const renderRef = useRef<Render | null>(null);
   const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
 
   const [shapeSettings, setShapeSettings] = useState<ShapeSettings>({
@@ -73,6 +73,7 @@ export const Playground: React.FC = () => {
         background: backgroundColor,
       }
     });
+    renderRef.current = render;
 
     // Create walls based on selected type
     createWalls();
@@ -102,6 +103,14 @@ export const Playground: React.FC = () => {
       render.canvas.remove();
       render.textures = {};
     };
+  }, []);
+
+  // Apply background color when it changes
+  useEffect(() => {
+    if (renderRef.current) {
+      // Update only the background color without recreating the entire scene
+      renderRef.current.options.background = backgroundColor;
+    }
   }, [backgroundColor]);
 
   // Update physics settings when they change
@@ -251,25 +260,6 @@ export const Playground: React.FC = () => {
 
   const handleBackgroundColorChange = (color: string) => {
     setBackgroundColor(color);
-    
-    // Update the renderer background
-    if (engineRef.current && canvasRef.current) {
-      const render = Render.create({
-        canvas: canvasRef.current,
-        engine: engineRef.current,
-        options: {
-          width: containerRef.current!.clientWidth,
-          height: containerRef.current!.clientHeight,
-          wireframes: false,
-          background: color,
-        }
-      });
-      
-      // Stop existing renderer and start the new one
-      Render.stop(render);
-      Render.run(render);
-    }
-    
     toast(`Background color changed to ${color}`);
   };
 
