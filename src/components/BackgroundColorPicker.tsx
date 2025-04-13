@@ -33,7 +33,7 @@ export const BackgroundColorPicker: React.FC<BackgroundColorPickerProps> = ({
       <PopoverTrigger asChild>
         <Button 
           variant="outline" 
-          className="fixed left-4 top-20 z-30 flex items-center gap-2 bg-white shadow-md"
+          className="fixed left-4 top-4 z-30 flex items-center gap-2 bg-white shadow-md"
         >
           <div 
             className="w-4 h-4 rounded-full border border-gray-300" 

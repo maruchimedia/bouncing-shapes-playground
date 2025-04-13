@@ -1,9 +1,9 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Engine, Render, World, Bodies, Body, Composite } from 'matter-js';
 import { ControlPanel } from './ControlPanel';
 import { toast } from "sonner";
 import { BackgroundColorPicker } from './BackgroundColorPicker';
-import { BoundaryDrawer } from './BoundaryDrawer';
 
 export type ShapeType = 'circle' | 'square' | 'triangle' | 'pentagon' | 'hexagon';
 
@@ -22,16 +22,14 @@ export interface PhysicsSettings {
     y: number;
   };
   airFriction: number;
-  wallType: 'square' | 'circle' | 'triangle' | 'custom';
+  wallType: 'square' | 'circle' | 'triangle';
 }
 
 export const Playground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Engine | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
-  const [customBoundaryPoints, setCustomBoundaryPoints] = useState<{x: number, y: number}[]>([]);
 
   const [shapeSettings, setShapeSettings] = useState<ShapeSettings>({
     type: 'circle',
@@ -124,42 +122,7 @@ export const Playground: React.FC = () => {
     // Create new walls
     createWalls();
 
-  }, [physicsSettings, customBoundaryPoints]);
-
-  const createCustomBoundary = () => {
-    if (!engineRef.current || customBoundaryPoints.length < 3) return [];
-    
-    const walls = [];
-    
-    // Create boundary segments connecting each point
-    for (let i = 0; i < customBoundaryPoints.length; i++) {
-      const currentPoint = customBoundaryPoints[i];
-      const nextPoint = customBoundaryPoints[(i + 1) % customBoundaryPoints.length];
-      
-      // Calculate midpoint, length and angle for the boundary segment
-      const midX = (currentPoint.x + nextPoint.x) / 2;
-      const midY = (currentPoint.y + nextPoint.y) / 2;
-      const length = Math.sqrt(
-        Math.pow(nextPoint.x - currentPoint.x, 2) + 
-        Math.pow(nextPoint.y - currentPoint.y, 2)
-      );
-      const angle = Math.atan2(
-        nextPoint.y - currentPoint.y,
-        nextPoint.x - currentPoint.x
-      );
-      
-      // Create a thin rectangle to serve as a wall segment
-      walls.push(
-        Bodies.rectangle(midX, midY, length, 10, {
-          isStatic: true,
-          angle: angle,
-          render: { fillStyle: '#E5E7EB' }
-        })
-      );
-    }
-    
-    return walls;
-  };
+  }, [physicsSettings]);
 
   const createWalls = () => {
     if (!engineRef.current || !containerRef.current) return;
@@ -170,11 +133,7 @@ export const Playground: React.FC = () => {
 
     const walls = [];
 
-    if (physicsSettings.wallType === 'custom' && customBoundaryPoints.length >= 3) {
-      // Use custom boundary
-      const customWalls = createCustomBoundary();
-      walls.push(...customWalls);
-    } else if (physicsSettings.wallType === 'square') {
+    if (physicsSettings.wallType === 'square') {
       // Ground (bottom)
       walls.push(
         Bodies.rectangle(
@@ -293,14 +252,22 @@ export const Playground: React.FC = () => {
   const handleBackgroundColorChange = (color: string) => {
     setBackgroundColor(color);
     
-    // Update the renderer background if it exists
+    // Update the renderer background
     if (engineRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      if (context) {
-        context.fillStyle = color;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-      }
+      const render = Render.create({
+        canvas: canvasRef.current,
+        engine: engineRef.current,
+        options: {
+          width: containerRef.current!.clientWidth,
+          height: containerRef.current!.clientHeight,
+          wireframes: false,
+          background: color,
+        }
+      });
+      
+      // Stop existing renderer and start the new one
+      Render.stop(render);
+      Render.run(render);
     }
     
     toast(`Background color changed to ${color}`);
@@ -312,12 +279,6 @@ export const Playground: React.FC = () => {
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
-    if (isDrawingMode) {
-      // Add point to custom boundary
-      setCustomBoundaryPoints(prev => [...prev, { x, y }]);
-      return;
-    }
     
     if (!engineRef.current) return;
 
@@ -405,37 +366,6 @@ export const Playground: React.FC = () => {
 
     toast("All shapes cleared!");
   };
-  
-  const toggleDrawingMode = () => {
-    if (isDrawingMode) {
-      // Finish drawing mode
-      if (customBoundaryPoints.length >= 3) {
-        setPhysicsSettings({
-          ...physicsSettings,
-          wallType: 'custom'
-        });
-        toast("Custom boundary created!");
-      } else {
-        toast.error("Need at least 3 points for a boundary!");
-      }
-    } else {
-      // Start drawing mode
-      setCustomBoundaryPoints([]);
-      toast("Draw mode enabled! Click to place boundary points.");
-    }
-    setIsDrawingMode(!isDrawingMode);
-  };
-  
-  const clearCustomBoundary = () => {
-    setCustomBoundaryPoints([]);
-    if (physicsSettings.wallType === 'custom') {
-      setPhysicsSettings({
-        ...physicsSettings,
-        wallType: 'square'
-      });
-    }
-    toast("Custom boundary cleared!");
-  };
 
   return (
     <div ref={containerRef} className="w-full h-full relative">
@@ -443,12 +373,6 @@ export const Playground: React.FC = () => {
         ref={canvasRef} 
         onClick={handleCanvasClick} 
         className="w-full h-full absolute inset-0 z-0"
-      />
-      <BoundaryDrawer 
-        isDrawing={isDrawingMode}
-        points={customBoundaryPoints}
-        onToggleDrawing={toggleDrawingMode}
-        onClearBoundary={clearCustomBoundary}
       />
       <BackgroundColorPicker 
         currentColor={backgroundColor}
