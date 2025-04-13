@@ -1,4 +1,5 @@
-# Welcome to your Lovable project
+
+# Welcome to your Lovable project - Bouncing Shapes Playground
 
 ## Project info
 
@@ -36,19 +37,16 @@ npm i
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deploying to GitHub Pages
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+This project is configured to work with GitHub Pages. Here's how to deploy it:
 
-**Use GitHub Codespaces**
+1. Push your code to GitHub
+2. Go to your repository settings
+3. Navigate to the "Pages" section
+4. Set the source to "GitHub Actions"
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The workflow file in `.github/workflows/deploy.yml` will automatically build and deploy your site when you push to the main branch.
 
 ## What technologies are used for this project?
 
@@ -59,10 +57,14 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Matter.js (Physics Engine)
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/83333caf-a99a-449f-9b38-b35a5622fc27) and click on Share -> Publish.
+You can deploy this project using:
+
+1. Lovable: Open [Lovable](https://lovable.dev/projects/83333caf-a99a-449f-9b38-b35a5622fc27) and click on Share -> Publish.
+2. GitHub Pages: Push to GitHub and use the included GitHub Actions workflow.
 
 ## Can I connect a custom domain to my Lovable project?
 
